@@ -97,3 +97,14 @@ Newest at the bottom. Format: **Question → Decision → Why (alternatives cons
 - **Decision:** `npm run build:vercel` writes `.vercel/output/` directly: `static/` (the web app) and `functions/api/graphql.func/` (the Yoga handler bundled by esbuild into one `index.mjs` + `schema.graphql` + `.vc-config.json`). `vercel.json` only points Vercel at that build command.
 - **Why:** the server imports its own files with `.ts` extensions (so Node runs it without a build step). Vercel's zero-config TypeScript functions compile file by file, and I couldn't be sure they rewrite those specifiers. Bundling makes the function a single self-contained file (tested by running it from a folder with no `node_modules`), and also guarantees a single `graphql` module instance (see D15).
 - **Trade-off:** more build plumbing (~50 lines) than a zero-config `api/` folder; in exchange the deployed artifact is exactly what I tested locally.
+
+### D18. Place search results are not filtered
+
+- **Question:** live search for "Biarritz" also returns "Biarritz Pays Basque Airport". Open-Meteo gives a GeoNames `feature_code` (`PPL*` towns, `AIRP` airports, `RSRT` resorts…), so non-towns could be dropped.
+- **Decision:** don't filter. A towns-only filter risks hiding exactly what people search for skiing (resorts are often not coded as towns), and the combobox shows region + country, so an airport is easy to tell apart. Would revisit with real usage data.
+
+### D19. Frontend talks GraphQL with `fetch` + codegen'd typed strings
+
+- **Decision:** no GraphQL client library (Apollo/urql) and no axios. `@graphql-codegen/client-preset` with `documentMode: "string"` turns each `graphql(`…`)` query into a `TypedDocumentString` carrying its result and variable types; a ~50-line `request()` posts it with `fetch`, and TanStack Query handles caching, retries and cancellation (same as the reference project's data layer).
+- **Why:** Apollo/urql bring a normalized cache we don't need for two read-only queries; React Query already covers the rest. `documentMode: "string"` means the `graphql` package isn't shipped to the browser.
+- API errors become an `ApiError` with a typed `code` (`PLACE_NOT_FOUND`, `UPSTREAM_UNAVAILABLE`, `NETWORK_ERROR`, …) so UI states switch on codes, never on messages; aborts pass through untouched so React Query can cancel stale searches.

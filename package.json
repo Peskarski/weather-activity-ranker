@@ -9,6 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
@@ -17,7 +18,8 @@
     "build:vercel": "npm run build --workspaces --if-present && node scripts/build-vercel.mjs"
   },
   "devDependencies": {
-    "prettier": "^3.9.9",
-    "esbuild": "^0.28.2"
+    "concurrently": "^10.0.5",
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.9"
   }
 }
