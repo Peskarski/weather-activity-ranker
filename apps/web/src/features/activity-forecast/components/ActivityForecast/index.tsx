@@ -25,7 +25,9 @@ export const ActivityForecast = ({ placeId }: ActivityForecastProps) => {
     <section aria-labelledby="forecast-heading" className="flex flex-col gap-3">
       <div>
         <h2 id="forecast-heading" className="text-xl font-semibold text-gray-900">
-          <span aria-hidden="true">{countryFlag(place.countryCode)} </span>
+          <span aria-hidden="true" className="mr-2">
+            {countryFlag(place.countryCode)}
+          </span>
           {placeLabel(place)}
         </h2>
         <p className="text-sm text-gray-600">Activities ranked for the next 7 days.</p>
