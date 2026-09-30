@@ -1,4 +1,4 @@
-import { type PlaceSuggestion } from "../types";
+import { type PlaceName } from "../types";
 
 const REGIONAL_INDICATOR_A = 0x1f1e6;
 const LETTER_A = 65;
@@ -12,8 +12,8 @@ export const countryFlag = (countryCode: string | null) =>
       )
     : "";
 
-export const placeDetails = ({ name, region, country }: PlaceSuggestion) =>
+export const placeDetails = ({ name, region, country }: PlaceName) =>
   [region, country].filter((part) => part && part !== name).join(", ");
 
-export const placeLabel = (place: PlaceSuggestion) =>
+export const placeLabel = (place: PlaceName) =>
   [place.name, placeDetails(place)].filter(Boolean).join(", ");

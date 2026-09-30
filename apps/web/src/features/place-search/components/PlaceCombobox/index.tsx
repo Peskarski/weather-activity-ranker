@@ -1,8 +1,9 @@
 import { useId, useState } from "react";
 import { Input, Spinner } from "@shared/components";
+import { countryFlag, placeDetails, placeLabel } from "@shared/utils";
 import { usePlaceSearch } from "../../hooks";
 import { type PlaceSuggestion } from "../../types";
-import { countryFlag, getSearchStatus, placeDetails, placeLabel } from "../../utils";
+import { getSearchStatus } from "../../utils";
 
 type PlaceComboboxProps = {
   onSelect: (place: PlaceSuggestion) => void;

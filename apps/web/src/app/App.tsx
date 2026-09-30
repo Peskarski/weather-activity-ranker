@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useQueryParam } from "@shared/hooks";
+import { ActivityForecast } from "../features/activity-forecast/components";
 import { PlaceCombobox } from "../features/place-search/components";
 
 const queryClient = new QueryClient();
@@ -21,7 +22,14 @@ function App() {
             How good the next 7 days are for skiing, surfing and sightseeing.
           </p>
           <PlaceCombobox onSelect={(place) => setPlaceId(place.id)} />
-          {placeId && <p className="mt-6 text-gray-500">Selected place: {placeId}</p>}
+          <div className="mt-8">
+            {placeId && <ActivityForecast key={placeId} placeId={placeId} />}
+            {!placeId && (
+              <p className="text-gray-500">
+                Search for a city or town to see which activities the week is good for.
+              </p>
+            )}
+          </div>
         </div>
       </main>
     </QueryClientProvider>
