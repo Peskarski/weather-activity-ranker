@@ -141,7 +141,9 @@ export const PlaceCombobox = ({ onSelect }: PlaceComboboxProps) => {
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {isExpanded && status === "results" && `${places.length} places found.`}
+        {isExpanded &&
+          status === "results" &&
+          `${places.length} ${places.length === 1 ? "place" : "places"} found.`}
         {isExpanded && status === "empty" && "No places found."}
         {isExpanded && status === "error" && "Place search is unavailable."}
       </p>
