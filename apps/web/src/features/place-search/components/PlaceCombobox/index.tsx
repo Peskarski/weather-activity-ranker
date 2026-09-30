@@ -2,13 +2,11 @@ import { useId, useState } from "react";
 import { Input, Spinner } from "@shared/components";
 import { usePlaceSearch } from "../../hooks";
 import { type PlaceSuggestion } from "../../types";
-import { countryFlag, placeDetails, placeLabel } from "../../utils";
+import { countryFlag, getSearchStatus, placeDetails, placeLabel } from "../../utils";
 
 type PlaceComboboxProps = {
   onSelect: (place: PlaceSuggestion) => void;
 };
-
-type SearchStatus = "idle" | "loading" | "error" | "empty" | "results";
 
 export const PlaceCombobox = ({ onSelect }: PlaceComboboxProps) => {
   const id = useId();
@@ -20,15 +18,12 @@ export const PlaceCombobox = ({ onSelect }: PlaceComboboxProps) => {
 
   const { places, isError, isFetching, isSearchable, isDebouncing } = usePlaceSearch(query);
 
-  const status: SearchStatus = !isSearchable
-    ? "idle"
-    : isError
-      ? "error"
-      : places.length > 0
-        ? "results"
-        : isFetching || isDebouncing
-          ? "loading"
-          : "empty";
+  const status = getSearchStatus({
+    isSearchable,
+    isError,
+    hasResults: places.length > 0,
+    isLoading: isFetching || isDebouncing,
+  });
 
   const isExpanded = isOpen && status !== "idle";
   const hasOptions = isExpanded && status === "results";
