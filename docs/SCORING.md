@@ -92,6 +92,8 @@ e.g. `snow_depth_ecmwf_ifs025`).
 | Daytime visibility (km) | 0.10 | 1→0.1, 5→0.6, 20→1 | Flat light / whiteout is the main safety and fun killer. |
 | Sunshine fraction | 0.05 | 0→0.5, 0.7→1 | "Bluebird day" bonus; small, since overcast skiing is fine. |
 
+| Cap 35 | max temp ≥ 6 °C | Wet, slushy snow. Added after testing (see Tuning). |
+
 Trade-off: powder-focused skiers would weight fresh snow highest. I weighted base depth higher — for
 the average holiday skier, "is there enough snow to ski" matters more than powder; fresh snow is the
 differentiator between Good and Great.
@@ -124,6 +126,7 @@ Known gaps:
 
 | | Rule | Why |
 |---|---|---|
+| Cap 35 | precipitation ≥ 10 mm | Heavy rain. Added after testing (see Tuning). |
 | Cap 30 | thunderstorm | Possible, but shouldn't score well. |
 | Cap 30 | gusts ≥ 70 km/h | Same. |
 
@@ -140,7 +143,7 @@ the ranking of days.
 
 ## Indoor sightseeing
 
-Always available (DECISIONS D9). `score = 40 + 0.6 × (100 − outdoorScore)`, minus 20 when heavy
+Always available (DECISIONS D9). `score = min(100, 40 + 0.65 × (100 − outdoorScore))`, minus 20 when heavy
 snowfall (≥ 10 cm) or gusts ≥ 70 km/h make getting around hard.
 
 - Perfect outdoor day → 40 (*Fair*: "Great weather outside — save the museums for another day").
@@ -148,3 +151,19 @@ snowfall (≥ 10 cm) or gusts ≥ 70 km/h make getting around hard.
 
 **judgement call**, and the most debatable one: it ranks indoor sightseeing as the *alternative* to
 outdoor, not on its own merits.
+
+## Tuning found by tests and live data
+
+Scenario tests (`activities.test.ts`) encode what a sensible person would expect, and I ran the
+ranking on live forecasts for Biarritz, Nazaré, Warsaw, London and Farellones (Chile). Changes this
+caused:
+
+1. **Heavy rain barely hurt outdoor sightseeing.** 20 mm of rain at 6 °C still scored 42–52 (*Fair*),
+   because calm wind and mild-ish temperature kept their full weight. Same weighted-sum weakness gates
+   fix, but for "ruins it" rather than "impossible" → **cap 35 at ≥ 10 mm**.
+2. **A +7 °C, thin-base, overcast ski day scored 48 (*Fair*).** → **cap 35 at ≥ 6 °C** ("wet and
+   slushy snow").
+3. **Indoor could practically never be *Great*.** Outdoor on a wash-out day bottoms out around 30–35
+   (wind etc. still score), so `40 + 0.6 × 65 = 79`. Slope raised to **0.65**, clamped at 100.
+4. **Duplicate reasons** ("Heavy rain, 11.6 mm" + "11.6 mm of rain"). A cap can now name the factor it
+   *replaces*, so that factor isn't explained twice.
