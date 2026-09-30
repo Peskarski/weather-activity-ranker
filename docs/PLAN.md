@@ -88,3 +88,17 @@ README.md               what, how to run, assumptions, live URL
 - Local: `npm run dev` (server + web), query GraphiQL at `/api/graphql` for Innsbruck, Chamonix, Biarritz, Nazaré, Warsaw, "asdfgh".
 - Browser pane: combobox keyboard flow, loading skeleton, not-found, `?place=` deep link, mobile width.
 - Vercel preview/prod URL smoke test of the same cities.
+
+---
+
+## What changed during implementation
+
+The plan above is kept as approved. Deviations, with reasons in [DECISIONS.md](DECISIONS.md):
+
+- **No probe ring for surfing** — the Marine API already snaps to the nearest sea cell (D8, revised).
+- **Snow depth from ECMWF IFS** instead of the default model (D12).
+- **Caps** added next to gates and factors after scenario tests (D13, SCORING.md → Tuning).
+- **Reason codes instead of reason text** in the API; the frontend owns wording (D14).
+- **graphql 16** instead of 17 because of a dual-package bug with Yoga (D15).
+- **Build Output API + esbuild bundle** instead of a zero-config `api/graphql.ts` (D17).
+- Dev ports 4010 (API) and 5180 (web) to avoid clashing with other local projects.
