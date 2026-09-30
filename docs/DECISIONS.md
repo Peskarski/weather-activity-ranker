@@ -35,13 +35,21 @@ Newest at the bottom. Format: **Question → Decision → Why (alternatives cons
 - **Why:** Open-Meteo gives a forecast for the town's elevation. Valley towns (Innsbruck ~570 m) under-report mountain conditions; resort towns (Zermatt, Chamonix) work well. We don't have a ski-resort dataset, and inventing an "upslope" elevation could claim skiing where no slopes exist.
 - **Known limitation:** documented in README.
 
-### D8. Surfing probes a ring of sea points around the city
-- **Why:** the Marine API returns nulls when the city's grid cell is land — true for many coastal cities. One multi-coordinate request (city + ~10/25 km in 8 directions) finds the nearest cell with wave data; if nothing within ~25 km → "No coast nearby".
+### D8. Surfing: how far from the city do we look for sea?
+- **Original decision:** probe a ring of points (~10/25 km, 8 directions) in one multi-coordinate Marine request, assuming the API returns nulls whenever the city's grid cell is land.
+- **Revised after testing the API:** a single point. The Marine API already snaps to the nearest sea cell (Rome → cell off Ostia ~20 km away); genuinely inland places return `null`. The ring would add complexity for nothing. We show the distance to the cell used. Evidence in [SCORING.md](SCORING.md#findings-from-real-api-responses-2026-09-30).
 - **Cut:** wind direction relative to the coast (offshore vs onshore) matters a lot to surfers but needs coastline orientation — noted, not built.
 
 ### D9. Indoor sightseeing is always available
 - **Decision:** scored as the "rainy-day alternative": higher when outdoor conditions are poor, lightly penalised for travel hazards (heavy snow, storms).
 - **Why:** weather doesn't stop a museum, so an absolute indoor score would be flat and useless for ranking. The interesting question is "is today a day to be inside?". This is the most debatable product call — would confirm with PM.
+
+### D12. Snow depth comes from ECMWF IFS, everything else from Open-Meteo's `best_match`
+- **Why:** the default model's snow depth jumps from 0 to 0.45 m mid-week in Zermatt with zero snowfall (model handover artifact); ECMWF is consistent and plausible, GFS under-reports by ~10×. One request fetches both models.
+
+### D13. Gates vs caps
+- **Decision:** gates make a day *Not possible* (score 0); caps limit the maximum score (thunderstorm → outdoor sightseeing ≤ 30).
+- **Why:** a weighted sum can't express "impossible" — a flat sea with sunshine would still score ~55 for surfing.
 
 ## Engineering
 
