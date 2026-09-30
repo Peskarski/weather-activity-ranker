@@ -79,3 +79,15 @@ Newest at the bottom. Format: **Question → Decision → Why (alternatives cons
 ### D11. No persistence, no cache layer
 
 - Per the brief. React Query caches on the client; Open-Meteo is called per request.
+
+### D15. graphql 16, not 17
+
+- **What happened:** with graphql 17, Yoga masked our intentional errors (`PLACE_NOT_FOUND`, …) as `INTERNAL_SERVER_ERROR` in tests. graphql 17 ships separate development/production builds; Vitest loaded our `graphql` import via the `development` condition while Yoga got the production build → two `GraphQLError` classes → Yoga's `instanceof` check failed.
+- **Decision:** pin graphql 16 (single build, what the Yoga/graphql-tools ecosystem is battle-tested on). graphql 16 still has the classic `.mjs`/`.js` dual-package split under Vite, so `vitest.config.ts` aliases `graphql` to the same CommonJS entry Node uses. Verified plain Node (dev server) returns the right error codes without any alias.
+- **Would revisit** once graphql 17 settles across the ecosystem.
+
+### D16. Schema-first GraphQL, codegen for types
+
+- `schema.graphql` is the single source of truth: resolvers are typed from it (`@graphql-codegen/typescript-resolvers`), and the frontend will generate its types from the same file. Because the scoring layer's own TS types are checked against the generated resolver types, adding an enum value on one side only fails compilation.
+- Expected failures are `GraphQLError`s with `extensions.code` (`BAD_USER_INPUT`, `PLACE_NOT_FOUND`, `UPSTREAM_UNAVAILABLE`); anything else is masked by Yoga as "Unexpected error." so internals never leak.
+- **Alternative:** code-first (Pothos) — great type inference, but the SDL is then an artifact, and I wanted the contract readable in one file for review and for frontend codegen.

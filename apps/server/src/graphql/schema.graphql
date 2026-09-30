@@ -1,0 +1,134 @@
+type Query {
+  """
+  Places matching a name, for autocomplete. Returns an empty list for queries shorter than 2 characters.
+  """
+  searchPlaces(query: String!): [Place!]!
+
+  """
+  How good the next 7 days are for each activity at a place, best activity first.
+  Errors: BAD_USER_INPUT, PLACE_NOT_FOUND, UPSTREAM_UNAVAILABLE (extensions.code).
+  """
+  activityForecast(placeId: ID!): ActivityForecast!
+}
+
+type Place {
+  id: ID!
+  name: String!
+  "First-level administrative area, e.g. state or region."
+  region: String
+  country: String
+  countryCode: String
+  latitude: Float!
+  longitude: Float!
+  elevation: Float
+  "IANA time zone; forecast dates are local to it."
+  timezone: String!
+}
+
+type ActivityForecast {
+  place: Place!
+  activities: [ActivityRanking!]!
+}
+
+enum Activity {
+  SKIING
+  SURFING
+  OUTDOOR_SIGHTSEEING
+  INDOOR_SIGHTSEEING
+}
+
+enum ScoreLabel {
+  GREAT
+  GOOD
+  FAIR
+  POOR
+  NOT_POSSIBLE
+}
+
+type ActivityRanking {
+  activity: Activity!
+  available: Boolean!
+  "Why no day this week is possible. Null when available."
+  unavailableReason: ReasonCode
+  "Distance from the place to the sea grid cell the wave forecast comes from. Surfing only."
+  waveForecastDistanceKm: Float
+  "Mean of the 3 best daily scores, 0-100. Null when unavailable."
+  weekScore: Int
+  weekLabel: ScoreLabel!
+  "ISO date of the highest-scoring day."
+  bestDay: String
+  days: [DayScore!]!
+}
+
+type DayScore {
+  "ISO date, local to the place."
+  date: String!
+  "0-100"
+  score: Int!
+  label: ScoreLabel!
+  "Up to 3, most important first."
+  reasons: [Reason!]!
+}
+
+enum Impact {
+  POSITIVE
+  NEGATIVE
+}
+
+type Reason {
+  code: ReasonCode!
+  impact: Impact!
+  "Measurement behind the reason, in the unit listed on its code. Null when the code has none."
+  value: Float
+}
+
+enum ReasonCode {
+  "Snow depth, m"
+  NO_SNOW
+  "Wind gusts, km/h"
+  LIFTS_CLOSED
+  THUNDERSTORM
+  NO_COAST
+  MARINE_UNAVAILABLE
+  NO_WAVE_DATA
+  "Wave height, m"
+  FLAT
+  "Wave height, m"
+  TOO_BIG
+  "Max temperature, °C"
+  SLUSH
+  "Precipitation, mm"
+  HEAVY_RAIN
+  "Wind gusts, km/h"
+  STRONG_GUSTS
+  "Snowfall, cm"
+  HEAVY_SNOW
+  "Outdoor sightseeing score, 0-100"
+  BAD_WEATHER_OUTSIDE
+  "Outdoor sightseeing score, 0-100"
+  GOOD_WEATHER_OUTSIDE
+  "Snow depth, m"
+  SNOW_DEPTH
+  "Snowfall over today and yesterday, cm"
+  FRESH_SNOW
+  "Max temperature, °C"
+  TEMPERATURE
+  "Max apparent temperature, °C"
+  FEELS_LIKE
+  "Wind gusts, km/h"
+  GUSTS
+  "Max wind speed, km/h"
+  WIND
+  "Mean daytime visibility, km"
+  VISIBILITY
+  "Share of daylight with sunshine, 0-1"
+  SUNSHINE
+  "Precipitation, mm"
+  PRECIPITATION
+  "Max precipitation probability, %"
+  PRECIPITATION_PROBABILITY
+  "Max wave height, m"
+  WAVE_HEIGHT
+  "Max swell period, s"
+  SWELL_PERIOD
+}
