@@ -91,3 +91,9 @@ Newest at the bottom. Format: **Question → Decision → Why (alternatives cons
 - `schema.graphql` is the single source of truth: resolvers are typed from it (`@graphql-codegen/typescript-resolvers`), and the frontend will generate its types from the same file. Because the scoring layer's own TS types are checked against the generated resolver types, adding an enum value on one side only fails compilation.
 - Expected failures are `GraphQLError`s with `extensions.code` (`BAD_USER_INPUT`, `PLACE_NOT_FOUND`, `UPSTREAM_UNAVAILABLE`); anything else is masked by Yoga as "Unexpected error." so internals never leak.
 - **Alternative:** code-first (Pothos) — great type inference, but the SDL is then an artifact, and I wanted the contract readable in one file for review and for frontend codegen.
+
+### D17. Deploy via Vercel's Build Output API with an esbuild-bundled function
+
+- **Decision:** `npm run build:vercel` writes `.vercel/output/` directly: `static/` (the web app) and `functions/api/graphql.func/` (the Yoga handler bundled by esbuild into one `index.mjs` + `schema.graphql` + `.vc-config.json`). `vercel.json` only points Vercel at that build command.
+- **Why:** the server imports its own files with `.ts` extensions (so Node runs it without a build step). Vercel's zero-config TypeScript functions compile file by file, and I couldn't be sure they rewrite those specifiers. Bundling makes the function a single self-contained file (tested by running it from a folder with no `node_modules`), and also guarantees a single `graphql` module instance (see D15).
+- **Trade-off:** more build plumbing (~50 lines) than a zero-config `api/` folder; in exchange the deployed artifact is exactly what I tested locally.

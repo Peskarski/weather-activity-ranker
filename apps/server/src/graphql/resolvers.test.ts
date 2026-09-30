@@ -32,7 +32,7 @@ const execute = async (query: string, variables: Record<string, unknown>) => {
   return response.json();
 };
 
-const SEARCH = /* GraphQL */ `
+const SEARCH = `
   query Search($query: String!) {
     searchPlaces(query: $query) {
       id
@@ -43,7 +43,7 @@ const SEARCH = /* GraphQL */ `
   }
 `;
 
-const FORECAST = /* GraphQL */ `
+const FORECAST = `
   query Forecast($placeId: ID!) {
     activityForecast(placeId: $placeId) {
       place {

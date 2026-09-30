@@ -13,9 +13,11 @@
     "lint": "npm run lint --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "build:vercel": "npm run build --workspaces --if-present && node scripts/build-vercel.mjs"
   },
   "devDependencies": {
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.9",
+    "esbuild": "^0.28.2"
   }
 }
