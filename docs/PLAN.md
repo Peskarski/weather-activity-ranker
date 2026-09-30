@@ -1,9 +1,11 @@
 # Plan: Weather Activity Ranker (Collinson take-home)
 
 ## Context
+
 Take-home for a Web Engineer role at Collinson (React/TS/Node/GraphQL). Build a service + UI that takes a city and ranks the next 7 days for Skiing, Surfing, Outdoor sightseeing, Indoor sightseeing, using Open-Meteo. Reviewers care most about **how we worked** (decisions, assumptions, AI usage, commits), then the app + README. Budget ≈ half a day. Must be deployed on a free host.
 
 User decisions already made:
+
 - Scoring: **weighted factors (0–1 piecewise-linear curves) + hard gates** → 0–100
 - Input: **accessible autocomplete combobox** backed by geocoding
 - Results: **ranked activity cards with a 7-day score strip**, best day, 2–3 reasons; unavailable activities sink to the bottom with explanation
@@ -15,6 +17,7 @@ User decisions already made:
 Working style: step-by-step, one step per commit/PR, pause for review after each. Frontend explanations terse; **backend explained in depth** (what/why/alternatives + 1–2 interview questions per backend step). No code comments.
 
 ## Repo layout (new public GitHub repo, e.g. `~/Documents/projects/weather-activity-ranker`)
+
 ```
 package.json            npm workspaces: apps/*
 vercel.json             build apps/web → apps/web/dist, functions from /api
@@ -34,6 +37,7 @@ README.md               what, how to run, assumptions, live URL
 ```
 
 ## Backend
+
 - **GraphQL Yoga** (fetch-API native → runs unchanged as a Vercel function and a local Node server), schema-first SDL, `@graphql-codegen` for resolver types and client types from one `schema.graphql`.
 - Schema sketch:
   - `searchPlaces(query: String!): [Place!]!` → Open-Meteo geocoding `/v1/search`
@@ -53,6 +57,7 @@ README.md               what, how to run, assumptions, live URL
 - Vitest unit tests on curves, gates, each activity with fixture days, aggregate (top-3 mean).
 
 ## Frontend (apps/web, mirror `/Users/v.piaskarski/Documents/projects/currency-converter`)
+
 - Copy configs/conventions: Vite 8 + `@vitejs/plugin-react` + `@rolldown/plugin-babel` with `reactCompilerPreset()`, Tailwind v4 via `@tailwindcss/vite`, TanStack Query v5, `@shared` alias (vite.config, vitest.config, tsconfig.app.json), eslint flat config (+ query plugin, prettier), `.prettierrc.json {printWidth:100}`, Vitest + RTL + user-event + jest-dom, `src/test/setup.ts`.
 - Conventions: PascalCase component folders with `index.tsx`, `export const X = () =>`, `type` not `interface`, barrels `export * from`, handlers `handleX`, UPPER_SNAKE constants, no manual memoization.
 - Structure:
@@ -65,6 +70,7 @@ README.md               what, how to run, assumptions, live URL
 - A11y: labelled combobox, `aria-live` for result/loading announcements, visible focus, text labels alongside colours.
 
 ## Steps (one commit/PR each, pause after each)
+
 0. Scaffold repo + workspaces, `docs/DECISIONS.md`, init git, public GitHub repo.
 1. Domain research with the model → `docs/SCORING.md` (thresholds, weights, what was challenged/rejected).
 2. BE: Open-Meteo client (geocoding, forecast, marine ring) + normalization to `DayWeather`.
@@ -77,6 +83,7 @@ README.md               what, how to run, assumptions, live URL
 9. Polish: a11y pass, README (what/run/assumptions/cuts), final deploy.
 
 ## Verification
+
 - `npm test -w apps/server` – scoring fixtures (e.g. Zermatt-like snowy day ≥ Good skiing; warm rainless day skiing gated; Warsaw surfing unavailable; Biarritz/Lisbon surfing available via ring).
 - Local: `npm run dev` (server + web), query GraphiQL at `/api/graphql` for Innsbruck, Chamonix, Biarritz, Nazaré, Warsaw, "asdfgh".
 - Browser pane: combobox keyboard flow, loading skeleton, not-found, `?place=` deep link, mobile width.

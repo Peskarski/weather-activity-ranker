@@ -1,6 +1,5 @@
 import type { DayWeather } from "../../openMeteo/index.ts";
 import { toLabel } from "../labels.ts";
-import { whole } from "../format.ts";
 import type { DayScore, Reason } from "../types.ts";
 
 const BASE_SCORE = 40;
@@ -14,24 +13,24 @@ const MAX_REASONS = 3;
 
 const travelHazards = ({ snowfallSum, windGustsMax }: DayWeather): Reason[] => [
   ...((snowfallSum ?? 0) >= HEAVY_SNOW_CM
-    ? [{ text: `${whole(snowfallSum ?? 0)} cm of snow, getting around may be hard`, impact: "NEGATIVE" as const }]
+    ? [{ code: "HEAVY_SNOW", impact: "NEGATIVE", value: snowfallSum } as const]
     : []),
   ...((windGustsMax ?? 0) >= STRONG_GUSTS_KMH
-    ? [{ text: `Gusts up to ${whole(windGustsMax ?? 0)} km/h, getting around may be hard`, impact: "NEGATIVE" as const }]
+    ? [{ code: "STRONG_GUSTS", impact: "NEGATIVE", value: windGustsMax } as const]
     : []),
 ];
 
 const outdoorContext = (outdoor: DayScore): Reason[] => {
   if (outdoor.score >= GOOD_OUTDOOR_FROM) {
-    return [{ text: "Great weather outside, better spent outdoors", impact: "NEGATIVE" }];
+    return [{ code: "GOOD_WEATHER_OUTSIDE", impact: "NEGATIVE", value: outdoor.score }];
   }
 
   const badWeather = outdoor.reasons
     .filter(({ impact }) => impact === "NEGATIVE")
-    .map(({ text }) => ({ text, impact: "POSITIVE" as const }));
+    .map((reason): Reason => ({ ...reason, impact: "POSITIVE" }));
 
   return outdoor.score < BAD_OUTDOOR_BELOW
-    ? [{ text: "Poor weather outside, a good day to be indoors", impact: "POSITIVE" }, ...badWeather]
+    ? [{ code: "BAD_WEATHER_OUTSIDE", impact: "POSITIVE", value: outdoor.score }, ...badWeather]
     : badWeather;
 };
 
@@ -46,6 +45,5 @@ export const indoorSightseeing = (day: DayWeather, outdoor: DayScore): DayScore 
     score,
     label: toLabel(score),
     reasons: [...hazards, ...outdoorContext(outdoor)].slice(0, MAX_REASONS),
-    gateId: null,
   };
 };

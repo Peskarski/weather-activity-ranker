@@ -6,30 +6,59 @@ export type ScoreLabel = "GREAT" | "GOOD" | "FAIR" | "POOR" | "NOT_POSSIBLE";
 
 export type Impact = "POSITIVE" | "NEGATIVE";
 
-export type Reason = { text: string; impact: Impact };
+export type ReasonCode =
+  | "NO_SNOW"
+  | "LIFTS_CLOSED"
+  | "THUNDERSTORM"
+  | "NO_COAST"
+  | "MARINE_UNAVAILABLE"
+  | "NO_WAVE_DATA"
+  | "FLAT"
+  | "TOO_BIG"
+  | "SLUSH"
+  | "HEAVY_RAIN"
+  | "STRONG_GUSTS"
+  | "HEAVY_SNOW"
+  | "BAD_WEATHER_OUTSIDE"
+  | "GOOD_WEATHER_OUTSIDE"
+  | "SNOW_DEPTH"
+  | "FRESH_SNOW"
+  | "TEMPERATURE"
+  | "FEELS_LIKE"
+  | "GUSTS"
+  | "WIND"
+  | "VISIBILITY"
+  | "SUNSHINE"
+  | "PRECIPITATION"
+  | "PRECIPITATION_PROBABILITY"
+  | "WAVE_HEIGHT"
+  | "SWELL_PERIOD";
+
+export type Reason = { code: ReasonCode; impact: Impact; value: number | null };
 
 export type CurvePoint = readonly [value: number, quality: number];
 
+type Measure = (day: DayWeather) => number | null;
+
 export type Factor = {
-  id: string;
+  code: ReasonCode;
   weight: number;
-  value: (day: DayWeather) => number | null;
+  value: Measure;
   curve: readonly CurvePoint[];
-  describe: (value: number) => string;
 };
 
 export type Gate = {
-  id: string;
+  code: ReasonCode;
   when: (day: DayWeather) => boolean;
-  reason: (day: DayWeather) => string;
-  weekReason: string;
+  value?: Measure;
 };
 
 export type Cap = {
-  replacesFactor?: string;
+  code: ReasonCode;
   when: (day: DayWeather) => boolean;
   maxScore: number;
-  reason: (day: DayWeather) => string;
+  value?: Measure;
+  replacesFactor?: ReasonCode;
 };
 
 export type ActivityModel = {
@@ -44,14 +73,13 @@ export type DayScore = {
   score: number;
   label: ScoreLabel;
   reasons: Reason[];
-  gateId: string | null;
 };
 
 export type ActivityRanking = {
   activity: Activity;
   available: boolean;
-  unavailableReason: string | null;
-  note: string | null;
+  unavailableReason: ReasonCode | null;
+  waveForecastDistanceKm: number | null;
   weekScore: number | null;
   weekLabel: ScoreLabel;
   bestDay: string | null;

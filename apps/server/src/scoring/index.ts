@@ -1,2 +1,10 @@
 export { rankActivities } from "./rankActivities.ts";
-export type { Activity, ActivityRanking, DayScore, Reason, ScoreLabel } from "./types.ts";
+export type {
+  Activity,
+  ActivityRanking,
+  DayScore,
+  Impact,
+  Reason,
+  ReasonCode,
+  ScoreLabel,
+} from "./types.ts";

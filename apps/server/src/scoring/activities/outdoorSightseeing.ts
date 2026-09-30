@@ -1,4 +1,4 @@
-import { isThunderstorm, oneDecimal, percent, whole } from "../format.ts";
+import { isThunderstorm } from "../weather.ts";
 import type { ActivityModel } from "../types.ts";
 
 const STORM_CAP = 30;
@@ -11,7 +11,7 @@ export const outdoorSightseeing: ActivityModel = {
   gates: [],
   factors: [
     {
-      id: "precipitation",
+      code: "PRECIPITATION",
       weight: 0.25,
       value: ({ precipitationSum }) => precipitationSum,
       curve: [
@@ -20,10 +20,9 @@ export const outdoorSightseeing: ActivityModel = {
         [5, 0.4],
         [15, 0.05],
       ],
-      describe: (mm) => (mm < 0.1 ? "Dry" : `${oneDecimal(mm)} mm of rain`),
     },
     {
-      id: "precipitationProbability",
+      code: "PRECIPITATION_PROBABILITY",
       weight: 0.1,
       value: ({ precipitationProbabilityMax }) => precipitationProbabilityMax,
       curve: [
@@ -31,10 +30,9 @@ export const outdoorSightseeing: ActivityModel = {
         [50, 0.6],
         [80, 0.2],
       ],
-      describe: (probability) => `${whole(probability)}% chance of rain`,
     },
     {
-      id: "feelsLike",
+      code: "FEELS_LIKE",
       weight: 0.3,
       value: ({ apparentTemperatureMax }) => apparentTemperatureMax,
       curve: [
@@ -45,10 +43,9 @@ export const outdoorSightseeing: ActivityModel = {
         [30, 0.6],
         [35, 0.15],
       ],
-      describe: (celsius) => `Feels like ${whole(celsius)}°C`,
     },
     {
-      id: "wind",
+      code: "WIND",
       weight: 0.2,
       value: ({ windSpeedMax }) => windSpeedMax,
       curve: [
@@ -56,10 +53,9 @@ export const outdoorSightseeing: ActivityModel = {
         [35, 0.6],
         [50, 0.2],
       ],
-      describe: (kmh) => `Wind up to ${whole(kmh)} km/h`,
     },
     {
-      id: "sunshine",
+      code: "SUNSHINE",
       weight: 0.15,
       value: ({ sunshineFraction }) => sunshineFraction,
       curve: [
@@ -67,25 +63,26 @@ export const outdoorSightseeing: ActivityModel = {
         [0.5, 0.8],
         [0.7, 1],
       ],
-      describe: (fraction) => `${percent(fraction)} sunshine`,
     },
   ],
   caps: [
     {
-      replacesFactor: "precipitation",
+      code: "HEAVY_RAIN",
       when: ({ precipitationSum }) => (precipitationSum ?? 0) >= HEAVY_RAIN_MM,
       maxScore: HEAVY_RAIN_CAP,
-      reason: ({ precipitationSum }) => `Heavy rain, ${oneDecimal(precipitationSum ?? 0)} mm`,
+      value: ({ precipitationSum }) => precipitationSum,
+      replacesFactor: "PRECIPITATION",
     },
     {
+      code: "THUNDERSTORM",
       when: ({ weatherCode }) => isThunderstorm(weatherCode),
       maxScore: STORM_CAP,
-      reason: () => "Thunderstorms expected",
     },
     {
+      code: "STRONG_GUSTS",
       when: ({ windGustsMax }) => (windGustsMax ?? 0) >= STRONG_GUSTS_KMH,
       maxScore: STORM_CAP,
-      reason: ({ windGustsMax }) => `Gusts up to ${whole(windGustsMax ?? 0)} km/h`,
+      value: ({ windGustsMax }) => windGustsMax,
     },
   ],
 };

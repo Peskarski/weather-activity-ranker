@@ -1,4 +1,4 @@
-import { isThunderstorm, oneDecimal, whole } from "../format.ts";
+import { isThunderstorm } from "../weather.ts";
 import type { ActivityModel } from "../types.ts";
 
 const FLAT_BELOW_M = 0.3;
@@ -8,33 +8,27 @@ export const surfing: ActivityModel = {
   activity: "SURFING",
   gates: [
     {
-      id: "NO_WAVE_DATA",
+      code: "NO_WAVE_DATA",
       when: ({ waveHeightMax }) => waveHeightMax === null,
-      reason: () => "No wave forecast for this day",
-      weekReason: "No wave forecast for this location",
     },
     {
-      id: "FLAT",
+      code: "FLAT",
       when: ({ waveHeightMax }) => (waveHeightMax ?? 0) < FLAT_BELOW_M,
-      reason: ({ waveHeightMax }) => `Flat, waves under ${whole((waveHeightMax ?? 0) * 100)} cm`,
-      weekReason: "Flat sea all week",
+      value: ({ waveHeightMax }) => waveHeightMax,
     },
     {
-      id: "TOO_BIG",
+      code: "TOO_BIG",
       when: ({ waveHeightMax }) => (waveHeightMax ?? 0) >= EXPERTS_ONLY_FROM_M,
-      reason: ({ waveHeightMax }) => `Waves up to ${oneDecimal(waveHeightMax ?? 0)} m, experts only`,
-      weekReason: "Waves too big for all but experts all week",
+      value: ({ waveHeightMax }) => waveHeightMax,
     },
     {
-      id: "THUNDERSTORM",
+      code: "THUNDERSTORM",
       when: ({ weatherCode }) => isThunderstorm(weatherCode),
-      reason: () => "Thunderstorms, stay out of the water",
-      weekReason: "Thunderstorms all week",
     },
   ],
   factors: [
     {
-      id: "waveHeight",
+      code: "WAVE_HEIGHT",
       weight: 0.35,
       value: ({ waveHeightMax }) => waveHeightMax,
       curve: [
@@ -46,10 +40,9 @@ export const surfing: ActivityModel = {
         [3.5, 0.5],
         [4.5, 0.1],
       ],
-      describe: (meters) => `Waves up to ${oneDecimal(meters)} m`,
     },
     {
-      id: "swellPeriod",
+      code: "SWELL_PERIOD",
       weight: 0.3,
       value: ({ swellPeriodMax }) => swellPeriodMax,
       curve: [
@@ -58,10 +51,9 @@ export const surfing: ActivityModel = {
         [10, 0.8],
         [12, 1],
       ],
-      describe: (seconds) => `${whole(seconds)} s swell period`,
     },
     {
-      id: "wind",
+      code: "WIND",
       weight: 0.25,
       value: ({ windSpeedMax }) => windSpeedMax,
       curve: [
@@ -70,10 +62,9 @@ export const surfing: ActivityModel = {
         [30, 0.25],
         [40, 0],
       ],
-      describe: (kmh) => `Wind up to ${whole(kmh)} km/h`,
     },
     {
-      id: "airTemperature",
+      code: "FEELS_LIKE",
       weight: 0.1,
       value: ({ apparentTemperatureMax }) => apparentTemperatureMax,
       curve: [
@@ -81,7 +72,6 @@ export const surfing: ActivityModel = {
         [15, 0.8],
         [22, 1],
       ],
-      describe: (celsius) => `Feels like ${whole(celsius)}°C`,
     },
   ],
   caps: [],

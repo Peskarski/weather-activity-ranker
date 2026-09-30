@@ -23,7 +23,8 @@ export const fetchJson = async <T>(
   try {
     response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
   } catch (error) {
-    const reason = error instanceof Error && error.name === "TimeoutError" ? "timed out" : "unreachable";
+    const reason =
+      error instanceof Error && error.name === "TimeoutError" ? "timed out" : "unreachable";
     throw new UpstreamError(service, reason);
   }
 

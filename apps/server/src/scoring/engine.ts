@@ -1,7 +1,7 @@
 import type { DayWeather } from "../openMeteo/index.ts";
 import { interpolate } from "./curve.ts";
 import { toLabel } from "./labels.ts";
-import type { ActivityModel, DayScore, Factor, Reason } from "./types.ts";
+import type { ActivityModel, DayScore, Factor, Impact, Reason } from "./types.ts";
 
 const MAX_REASONS = 3;
 const NEGATIVE_BELOW = 0.5;
@@ -25,10 +25,9 @@ const weightedScore = (evaluated: EvaluatedFactor[]) => {
 };
 
 const factorReasons = (evaluated: EvaluatedFactor[]): Reason[] => {
-  const toReason = (impact: Reason["impact"]) => ({ factor, value }: EvaluatedFactor) => ({
-    text: factor.describe(value),
-    impact,
-  });
+  const toReason =
+    (impact: Impact) =>
+    ({ factor, value }: EvaluatedFactor): Reason => ({ code: factor.code, impact, value });
 
   const negatives = evaluated
     .filter(({ quality }) => quality < NEGATIVE_BELOW)
@@ -50,26 +49,25 @@ export const scoreDay = (model: ActivityModel, day: DayWeather): DayScore => {
       date: day.date,
       score: 0,
       label: "NOT_POSSIBLE",
-      reasons: [{ text: gate.reason(day), impact: "NEGATIVE" }],
-      gateId: gate.id,
+      reasons: [{ code: gate.code, impact: "NEGATIVE", value: gate.value?.(day) ?? null }],
     };
   }
 
   const evaluated = evaluate(model.factors, day);
   const activeCaps = model.caps.filter(({ when }) => when(day));
   const score = Math.min(weightedScore(evaluated), ...activeCaps.map(({ maxScore }) => maxScore));
-  const capReasons: Reason[] = activeCaps.map((cap) => ({
-    text: cap.reason(day),
+  const capReasons = activeCaps.map((cap): Reason => ({
+    code: cap.code,
     impact: "NEGATIVE",
+    value: cap.value?.(day) ?? null,
   }));
   const replacedFactors = new Set(activeCaps.map(({ replacesFactor }) => replacesFactor));
-  const explainedFactors = evaluated.filter(({ factor }) => !replacedFactors.has(factor.id));
+  const explainedFactors = evaluated.filter(({ factor }) => !replacedFactors.has(factor.code));
 
   return {
     date: day.date,
     score,
     label: toLabel(score),
     reasons: [...capReasons, ...factorReasons(explainedFactors)].slice(0, MAX_REASONS),
-    gateId: null,
   };
 };

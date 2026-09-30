@@ -80,9 +80,7 @@ export const toDays = (forecast: ForecastResponse, marine: MarineResponse | null
     const visibilityMeters = daytimeMean(hourly.time, visibility, date);
     const marineDay = marineIndex.get(date);
     const marineValue = (variable: string) =>
-      marine && marineDay !== undefined
-        ? valueAt(series(marine.daily, variable), marineDay)
-        : null;
+      marine && marineDay !== undefined ? valueAt(series(marine.daily, variable), marineDay) : null;
 
     return [
       {

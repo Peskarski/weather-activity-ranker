@@ -21,6 +21,15 @@ const SURF = {
   apparentTemperatureMax: 22,
 };
 
+const WASH_OUT = {
+  precipitationSum: 20,
+  precipitationProbabilityMax: 100,
+  apparentTemperatureMax: 6,
+  sunshineFraction: 0,
+};
+
+const blocker = (result: ReturnType<typeof scoreDay>) => result.reasons[0];
+
 describe("skiing", () => {
   it("rates a cold powder day with a deep base as great", () => {
     expect(scoreDay(skiing, makeDay(WINTER)).label).toBe("GREAT");
@@ -29,12 +38,14 @@ describe("skiing", () => {
   it("is not possible without enough snow on the ground", () => {
     const result = scoreDay(skiing, makeDay({ ...WINTER, snowDepthMax: 0.12 }));
 
-    expect(result).toMatchObject({ label: "NOT_POSSIBLE", gateId: "NO_SNOW" });
-    expect(result.reasons[0].text).toBe("Only 12 cm of snow on the ground");
+    expect(result.label).toBe("NOT_POSSIBLE");
+    expect(blocker(result)).toEqual({ code: "NO_SNOW", impact: "NEGATIVE", value: 0.12 });
   });
 
   it("is not possible when gusts close the lifts", () => {
-    expect(scoreDay(skiing, makeDay({ ...WINTER, windGustsMax: 85 })).gateId).toBe("LIFTS_CLOSED");
+    const result = scoreDay(skiing, makeDay({ ...WINTER, windGustsMax: 85 }));
+
+    expect(blocker(result).code).toBe("LIFTS_CLOSED");
   });
 
   it("rates a warm slushy day on a thin base as poor", () => {
@@ -51,7 +62,7 @@ describe("skiing", () => {
     const result = scoreDay(skiing, slush);
 
     expect(result.label).toBe("POOR");
-    expect(result.reasons[0].text).toBe("High of 7°C, wet and slushy snow");
+    expect(blocker(result)).toEqual({ code: "SLUSH", impact: "NEGATIVE", value: 7 });
   });
 });
 
@@ -60,22 +71,21 @@ describe("surfing", () => {
     expect(scoreDay(surfing, makeDay(SURF)).label).toBe("GREAT");
   });
 
-  it("is not possible when the sea is flat", () => {
-    expect(scoreDay(surfing, makeDay({ ...SURF, waveHeightMax: 0.2 })).gateId).toBe("FLAT");
-  });
+  it.each([
+    ["the sea is flat", { waveHeightMax: 0.2 }, "FLAT"],
+    ["waves are too big for most surfers", { waveHeightMax: 6 }, "TOO_BIG"],
+    ["there are thunderstorms", { weatherCode: 95 }, "THUNDERSTORM"],
+  ])("is not possible when %s", (_, overrides, code) => {
+    const result = scoreDay(surfing, makeDay({ ...SURF, ...overrides }));
 
-  it("is not possible when waves are too big for most surfers", () => {
-    expect(scoreDay(surfing, makeDay({ ...SURF, waveHeightMax: 6 })).gateId).toBe("TOO_BIG");
+    expect(result.label).toBe("NOT_POSSIBLE");
+    expect(blocker(result).code).toBe(code);
   });
 
   it("rates short-period, windy chop as poor", () => {
     const chop = makeDay({ ...SURF, waveHeightMax: 0.8, swellPeriodMax: 5, windSpeedMax: 35 });
 
     expect(scoreDay(surfing, chop).label).toBe("POOR");
-  });
-
-  it("is not possible during thunderstorms", () => {
-    expect(scoreDay(surfing, makeDay({ ...SURF, weatherCode: 95 })).gateId).toBe("THUNDERSTORM");
   });
 });
 
@@ -84,46 +94,36 @@ describe("outdoor sightseeing", () => {
     expect(scoreDay(outdoorSightseeing, makeDay()).label).toBe("GREAT");
   });
 
-  it("rates a cold, wet, windy day as poor and says why", () => {
+  it("rates a cold, wet, windy day as poor with heavy rain as the main reason", () => {
     const result = scoreDay(
       outdoorSightseeing,
-      makeDay({
-        apparentTemperatureMax: 4,
-        precipitationSum: 14,
-        precipitationProbabilityMax: 95,
-        windSpeedMax: 40,
-        sunshineFraction: 0,
-      }),
+      makeDay({ ...WASH_OUT, precipitationSum: 14, apparentTemperatureMax: 4, windSpeedMax: 40 }),
     );
 
     expect(result.label).toBe("POOR");
-    expect(result.reasons[0].text).toBe("Heavy rain, 14 mm");
+    expect(blocker(result)).toEqual({ code: "HEAVY_RAIN", impact: "NEGATIVE", value: 14 });
   });
 
   it("caps an otherwise good day with thunderstorms", () => {
     const result = scoreDay(outdoorSightseeing, makeDay({ weatherCode: 95 }));
 
     expect(result.score).toBe(30);
-    expect(result.reasons[0].text).toBe("Thunderstorms expected");
+    expect(blocker(result).code).toBe("THUNDERSTORM");
   });
 });
 
 describe("indoor sightseeing", () => {
-  it("rates a wash-out day as great and gives the outdoor problems as reasons", () => {
-    const day = makeDay({
-      precipitationSum: 20,
-      precipitationProbabilityMax: 100,
-      apparentTemperatureMax: 6,
-      sunshineFraction: 0,
-    });
+  it("rates a wash-out day as great and turns the outdoor problems into reasons to stay in", () => {
+    const day = makeDay(WASH_OUT);
 
     const result = indoorSightseeing(day, scoreDay(outdoorSightseeing, day));
 
     expect(result.label).toBe("GREAT");
-    expect(result.reasons[0]).toEqual({
-      text: "Poor weather outside, a good day to be indoors",
-      impact: "POSITIVE",
-    });
+    expect(result.reasons.map(({ code, impact }) => [code, impact])).toEqual([
+      ["BAD_WEATHER_OUTSIDE", "POSITIVE"],
+      ["HEAVY_RAIN", "POSITIVE"],
+      ["FEELS_LIKE", "POSITIVE"],
+    ]);
   });
 
   it("rates a perfect outdoor day as fair", () => {
@@ -132,18 +132,17 @@ describe("indoor sightseeing", () => {
     const result = indoorSightseeing(day, scoreDay(outdoorSightseeing, day));
 
     expect(result.label).toBe("FAIR");
-    expect(result.reasons).toEqual([
-      { text: "Great weather outside, better spent outdoors", impact: "NEGATIVE" },
-    ]);
+    expect(result.reasons.map(({ code }) => code)).toEqual(["GOOD_WEATHER_OUTSIDE"]);
   });
 
   it("is penalised when heavy snow makes getting around hard", () => {
     const calm = makeDay({ precipitationSum: 10, apparentTemperatureMax: -2 });
     const snowy = makeDay({ precipitationSum: 10, apparentTemperatureMax: -2, snowfallSum: 15 });
 
-    const calmScore = indoorSightseeing(calm, scoreDay(outdoorSightseeing, calm)).score;
-    const snowyScore = indoorSightseeing(snowy, scoreDay(outdoorSightseeing, snowy)).score;
+    const calmResult = indoorSightseeing(calm, scoreDay(outdoorSightseeing, calm));
+    const snowyResult = indoorSightseeing(snowy, scoreDay(outdoorSightseeing, snowy));
 
-    expect(calmScore - snowyScore).toBe(20);
+    expect(calmResult.score - snowyResult.score).toBe(20);
+    expect(snowyResult.reasons[0]).toEqual({ code: "HEAVY_SNOW", impact: "NEGATIVE", value: 15 });
   });
 });
