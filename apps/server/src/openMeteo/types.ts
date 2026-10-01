@@ -44,30 +44,3 @@ export type TimeSeriesBlock = {
   time: string[];
   [variable: string]: string[] | Series;
 };
-
-export type GeocodingResult = {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  elevation?: number;
-  timezone: string;
-  country?: string;
-  country_code?: string;
-  admin1?: string;
-};
-
-export type GeocodingSearchResponse = {
-  results?: GeocodingResult[];
-};
-
-export type ForecastResponse = {
-  daily: TimeSeriesBlock;
-  hourly: TimeSeriesBlock;
-};
-
-export type MarineResponse = {
-  latitude: number;
-  longitude: number;
-  daily: TimeSeriesBlock;
-};

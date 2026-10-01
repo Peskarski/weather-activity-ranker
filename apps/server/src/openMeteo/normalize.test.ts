@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toDays, toMarineStatus } from "./normalize.ts";
-import type { ForecastResponse, MarineResponse, Place } from "./types.ts";
+import type { ForecastResponse, MarineResponse } from "./schemas.ts";
+import type { Place } from "./types.ts";
 
 const hoursOf = (date: string) =>
   Array.from({ length: 24 }, (_, hour) => `${date}T${String(hour).padStart(2, "0")}:00`);

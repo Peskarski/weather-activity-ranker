@@ -142,7 +142,8 @@ describe("activityForecast", () => {
     expect(result.data).toBeNull();
   });
 
-  it("reports the weather service being down", async () => {
+  it("reports the weather service being down and logs the cause", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(getPlace).mockResolvedValue(WARSAW);
     vi.mocked(fetchWeekWeather).mockRejectedValue(
       new UpstreamError("Open-Meteo forecast", "timed out"),
@@ -151,6 +152,7 @@ describe("activityForecast", () => {
     const result = await execute(FORECAST, { placeId: "756135" });
 
     expect(errorCode(result)).toBe("UPSTREAM_UNAVAILABLE");
+    expect(log).toHaveBeenCalledWith("Open-Meteo forecast: timed out");
   });
 
   it("hides unexpected errors from clients", async () => {

@@ -12,6 +12,7 @@ const withUpstreamErrors = async <T>(request: () => Promise<T>) => {
     return await request();
   } catch (error) {
     if (error instanceof UpstreamError) {
+      console.error(error.message);
       throw apiError("UPSTREAM_UNAVAILABLE", "The weather service is not responding. Try again.");
     }
     throw error;

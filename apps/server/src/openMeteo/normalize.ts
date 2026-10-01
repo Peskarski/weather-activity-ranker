@@ -1,14 +1,7 @@
 import { PRIMARY_MODEL, SNOW_MODEL } from "./forecast.ts";
 import { distanceKm } from "./geo.ts";
-import type {
-  DayWeather,
-  ForecastResponse,
-  MarineResponse,
-  MarineStatus,
-  Place,
-  Series,
-  TimeSeriesBlock,
-} from "./types.ts";
+import type { ForecastResponse, MarineResponse } from "./schemas.ts";
+import type { DayWeather, MarineStatus, Place, Series, TimeSeriesBlock } from "./types.ts";
 
 const DAYTIME_START_HOUR = 9;
 const DAYTIME_END_HOUR = 17;

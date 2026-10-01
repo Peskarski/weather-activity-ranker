@@ -1,5 +1,6 @@
 import { fetchJson, UpstreamError } from "./http.ts";
-import type { GeocodingResult, GeocodingSearchResponse, Place } from "./types.ts";
+import { geocodingResultSchema, geocodingSearchSchema, type GeocodingResult } from "./schemas.ts";
+import type { Place } from "./types.ts";
 
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1";
 const SERVICE = "Open-Meteo geocoding";
@@ -25,7 +26,7 @@ export const searchPlaces = async (query: string, limit = 8): Promise<Place[]> =
     format: "json",
   }).toString();
 
-  const data = await fetchJson<GeocodingSearchResponse>(SERVICE, url);
+  const data = await fetchJson(SERVICE, url, geocodingSearchSchema);
   return (data.results ?? []).map(toPlace);
 };
 
@@ -34,7 +35,7 @@ export const getPlace = async (id: number): Promise<Place | null> => {
   url.search = new URLSearchParams({ id: String(id), language: "en" }).toString();
 
   try {
-    return toPlace(await fetchJson<GeocodingResult>(SERVICE, url));
+    return toPlace(await fetchJson(SERVICE, url, geocodingResultSchema));
   } catch (error) {
     if (error instanceof UpstreamError && error.status === 400) {
       return null;

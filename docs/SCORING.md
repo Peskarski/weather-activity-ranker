@@ -68,6 +68,9 @@ e.g. `snow_depth_ecmwf_ifs025`).
    (Bordeaux ~50 km from coast, Madrid, Paris, Innsbruck, Geneva – lakes aren't modelled) return
    `null`. → **Dropped the planned probe ring** (DECISIONS D8, revised). One point is enough; we
    report the distance to the grid cell used ("waves measured ~20 km from the city").
+   **Limitation found later:** the marine grid doesn't cover some enclosed waters next to cities —
+   Tromsø (fjord), Reykjavík (Faxaflói bay) and La Paz, Mexico (Gulf of California) all come back as
+   "no coast". Fixing it needs a wider search radius or a coastline dataset; noted, not built.
 3. **Geocoding:** 1-character queries return nothing, 2 characters exact-match, 3+ fuzzy → the
    combobox searches from 2 characters. No-match responses have **no `results` key** (not an empty
    array). `/v1/get` with an unknown id returns HTTP 400 `{"error":true,"reason":"Location ID not found."}` →

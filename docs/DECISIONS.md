@@ -108,3 +108,9 @@ Newest at the bottom. Format: **Question → Decision → Why (alternatives cons
 - **Decision:** no GraphQL client library (Apollo/urql) and no axios. `@graphql-codegen/client-preset` with `documentMode: "string"` turns each `graphql(`…`)` query into a `TypedDocumentString` carrying its result and variable types; a ~50-line `request()` posts it with `fetch`, and TanStack Query handles caching, retries and cancellation (same as the reference project's data layer).
 - **Why:** Apollo/urql bring a normalized cache we don't need for two read-only queries; React Query already covers the rest. `documentMode: "string"` means the `graphql` package isn't shipped to the browser.
 - API errors become an `ApiError` with a typed `code` (`PLACE_NOT_FOUND`, `UPSTREAM_UNAVAILABLE`, `NETWORK_ERROR`, …) so UI states switch on codes, never on messages; aborts pass through untouched so React Query can cancel stale searches.
+
+### D20. Validate Open-Meteo responses at runtime with zod
+
+- **Decision:** every Open-Meteo response is parsed with a zod schema in `fetchJson` before the rest of the server sees it; the TypeScript types for the raw responses are inferred from the same schemas. A mismatch becomes an `UpstreamError` ("unexpected response: …" naming the field), which the API reports as `UPSTREAM_UNAVAILABLE` and logs server-side.
+- **Why:** TypeScript types are erased at runtime — before this, a renamed or missing field upstream would have flowed through as `undefined` and surfaced as a wrong score or a crash far from the cause. Validating at the boundary turns "silently wrong" into "loudly unavailable", with the cause in the logs.
+- **Checked against reality:** ran the validated client over 19 varied queries (91 search results, 17 forecasts — polar, Southern Hemisphere, high-altitude, non-ASCII, no-country places) before committing; all passed. Unknown extra fields are ignored, so Open-Meteo adding fields can't break us.

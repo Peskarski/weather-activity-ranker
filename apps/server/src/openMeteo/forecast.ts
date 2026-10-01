@@ -1,5 +1,5 @@
 import { fetchJson } from "./http.ts";
-import type { ForecastResponse, MarineResponse } from "./types.ts";
+import { forecastSchema, marineSchema } from "./schemas.ts";
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const MARINE_URL = "https://marine-api.open-meteo.com/v1/marine";
@@ -40,7 +40,7 @@ export const fetchForecast = ({ latitude, longitude }: Coordinates) => {
     forecast_days: String(FORECAST_DAYS),
   }).toString();
 
-  return fetchJson<ForecastResponse>("Open-Meteo forecast", url);
+  return fetchJson("Open-Meteo forecast", url, forecastSchema);
 };
 
 export const fetchMarine = ({ latitude, longitude }: Coordinates) => {
@@ -53,5 +53,5 @@ export const fetchMarine = ({ latitude, longitude }: Coordinates) => {
     forecast_days: String(FORECAST_DAYS),
   }).toString();
 
-  return fetchJson<MarineResponse>("Open-Meteo marine", url);
+  return fetchJson("Open-Meteo marine", url, marineSchema);
 };

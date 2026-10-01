@@ -132,7 +132,6 @@ Left out to stay within about half a day:
 - **Mountain-aware skiing** — look up nearby ski areas (e.g. OpenStreetMap) and forecast at their
   elevation instead of the town's.
 - **Forecast confidence** — day 7 counts the same as day 1; I'd show confidence rather than discount scores.
-- **Runtime validation of Open-Meteo responses** (e.g. zod) at the API boundary; types are trusted today.
 - **Server-side caching** of Open-Meteo responses (forecasts update hourly) if traffic grew.
 - **Arrow-key navigation inside the day strip** (roving tabindex) — today each day is a Tab stop.
 - **E2E tests** (Playwright) against the deployed app; current tests are unit, component and API level.

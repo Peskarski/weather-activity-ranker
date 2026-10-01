@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "graphql": "^16.14.2",
-    "graphql-yoga": "^5.24.1"
+    "graphql-yoga": "^5.24.1",
+    "zod": "^4.6.5"
   }
 }

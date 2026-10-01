@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 const DEFAULT_TIMEOUT_MS = 8000;
 
 export class UpstreamError extends Error {
@@ -12,11 +14,15 @@ export class UpstreamError extends Error {
   }
 }
 
-type ErrorBody = { error?: boolean; reason?: string };
+const errorBodySchema = z.object({
+  error: z.literal(true),
+  reason: z.string().optional(),
+});
 
 export const fetchJson = async <T>(
   service: string,
   url: URL,
+  schema: z.ZodType<T>,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<T> => {
   let response: Response;
@@ -28,11 +34,18 @@ export const fetchJson = async <T>(
     throw new UpstreamError(service, reason);
   }
 
-  const body = (await response.json().catch(() => null)) as (T & ErrorBody) | null;
+  const body: unknown = await response.json().catch(() => null);
+  const errorBody = errorBodySchema.safeParse(body);
 
-  if (!response.ok || body === null || body.error) {
-    throw new UpstreamError(service, body?.reason ?? `HTTP ${response.status}`, response.status);
+  if (!response.ok || errorBody.success) {
+    const reason = errorBody.data?.reason ?? `HTTP ${response.status}`;
+    throw new UpstreamError(service, reason, response.status);
   }
 
-  return body;
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    throw new UpstreamError(service, `unexpected response: ${z.prettifyError(parsed.error)}`);
+  }
+
+  return parsed.data;
 };
